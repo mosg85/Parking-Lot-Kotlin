@@ -1,0 +1,222 @@
+package parking
+
+import kotlin.system.exitProcess
+
+fun park(
+    list: MutableList<String>,
+    parkingLot: MutableList<Int>,
+    listNumberCar: MutableList<String>,
+    spotByColor: MutableList<String>,
+    regByColor: MutableList<String>,
+    spotByReg: MutableList<String>,
+) {
+
+    val car = readln().split(" ").toMutableList()
+    when (car.first()) {
+
+        "create" -> {
+            if (car.first() == "create") {
+                parkingLot.add(0, car.last().toInt())
+                println("Created a parking lot with ${parkingLot[0]} spots.")
+                create(list, listNumberCar, spotByColor, regByColor, spotByReg)
+                list.add(0, "create")
+            }
+        }
+
+        "spot_by_reg" -> {
+            spotByReg.clear()
+
+            if (car.first().contains("spot_by_reg") && listNumberCar.any { x ->
+                    x.contains(
+                        car.last(),
+                        ignoreCase = true
+                    )
+                }) {
+                for (i in listNumberCar.indices) {
+                    if (listNumberCar[i].contains(car.last())) {
+                        spotByReg += (i + 1).toString()
+                    }
+                }
+                println(spotByReg.joinToString(", ").first())
+
+            } else if (list.isNotEmpty() && car.first().contains("spot_by_reg") && !listNumberCar.any { x ->
+                    x.contains(
+                        car.last(),
+                        ignoreCase = true
+                    )
+                }) {
+                println("No cars with registration number ${car.last()} were found.")
+            }
+            if (list.isEmpty() && !list.contains("free") && !list.contains("create")) {
+                println("Sorry, a parking lot has not been created.")
+
+            }
+
+        }
+
+
+        "reg_by_color" -> {
+            regByColor.clear()
+            if (car.first().contains("reg_by_color") && listNumberCar.any { x ->
+                    x.contains(
+                        car.last(),
+                        ignoreCase = true
+                    )
+                }) {
+                for (i in listNumberCar) {
+                    if (i.contains(car.last(), ignoreCase = true)) {
+                        regByColor.add(i.substringAfter("[").split(" ").first())
+
+                    }
+                }
+                println(regByColor.joinToString())
+
+            } else if (list.isNotEmpty() && car.first().contains("reg_by_color") && !list.any { x ->
+                    x.contains(
+                        car.last(),
+                        ignoreCase = true
+                    )
+                }) {
+                println("No cars with color ${car.last()} were found.")
+            }
+            if (list.isEmpty() && !list.contains("free") && !list.contains("create")) {
+                println("Sorry, a parking lot has not been created.")
+
+            }
+
+        }
+
+
+        "spot_by_color" -> {
+            spotByColor.clear()
+            if (car.first().contains("spot_by_color") && list.any { x -> x.contains(car.last(), ignoreCase = true) }) {
+                for (i in list.indices) {
+                    if (list[i].contains(car.last(), ignoreCase = true)) {
+                        spotByColor += (i + 1).toString()
+                    }
+                }
+                println(spotByColor.joinToString(", "))
+
+            } else if (list.isNotEmpty() && car.first().contains("spot_by_color") && !list.any { x ->
+                    x.contains(
+                        car.last(),
+                        ignoreCase = true
+                    )
+                }) {
+                println("No cars with color ${car.last()} were found.")
+            }
+            if (list.isEmpty() && !list.contains("free") && !list.contains("create")) {
+                println("Sorry, a parking lot has not been created.")
+
+            }
+
+        }
+
+        "park" -> {
+            if (list.lastIndex + 1 == parkingLot.firstOrNull() && !list.contains("free") && !list.contains("create")) {
+                println("Sorry, the parking lot is full.")
+            } else if (list.contains("free") && listNumberCar.contains("free")) {
+                list.add(check(list), "${car.last()} car parked in spot ${check(list) + 1}.")
+                listNumberCar.add(checkListNumberCar(listNumberCar), "${car[1]} ${car.last()}")
+                println("${car.last()} car parked in spot ${check(list)}.")
+                list.remove("free")
+                listNumberCar.remove("free")
+            } else if (!list.contains("create") && list.isEmpty()) {
+                println("Sorry, a parking lot has not been created.")
+            } else {
+                list.remove("create")
+                listNumberCar.add("${car[1]} ${car.last()}")
+                list.add("${car.last()} car parked in spot ${list.indices.last + 2}.")
+                println("${car.last()} car parked in spot ${list.indices.last + 1}.")
+
+
+            }
+        }
+
+        "leave" -> {
+            try {
+                if (!list.contains("free") || list.contains("free")) {
+                    list.removeAt(car.last().toInt() - 1)
+                    listNumberCar.removeAt(car.last().toInt() - 1)
+                    list.add(car.last().toInt() - 1, "free")
+                    listNumberCar.add(car.last().toInt() - 1, "free")
+                    println("Spot ${car.last().toInt()} is free.")
+                }
+            } catch (e: IndexOutOfBoundsException) {
+                println("Sorry, a parking lot has not been created.")
+            }
+        }
+
+        "status" -> {
+            if (list.isEmpty() && !list.contains("free") && !list.contains("create")) {
+                println("Sorry, a parking lot has not been created.")
+            } else {
+                status(list, listNumberCar)
+            }
+        }
+
+        "exit" -> if (car.first() == "exit") {
+            exitProcess(0)
+        }
+    }
+}
+
+fun status(list: MutableList<String>, listNumberCar: MutableList<String>) {
+    if (list.isEmpty() || list.contains("create")) {
+        println("Parking lot is empty.")
+    } else {
+        for (i in listNumberCar.indices) {
+            if (listNumberCar[i] != "free") {
+                println("${i + 1} ${listNumberCar[i]}")
+            }
+        }
+    }
+}
+
+fun checkListNumberCar(listNumberCar: MutableList<String>): Int {
+    val result: MutableList<Int> = mutableListOf()
+    for (i in listNumberCar.indices) {
+        if (listNumberCar[i] == "free") {
+            result.add(i)
+        }
+    }
+    return result.minOf { it }
+}
+
+fun check(list: MutableList<String>): Int {
+    val result: MutableList<Int> = mutableListOf()
+    for (i in list.indices) {
+        if (list[i] == "free") {
+            result.add(i)
+        }
+    }
+    return result.minOf { it }
+}
+
+fun create(
+    list: MutableList<String>,
+    listNumberCar: MutableList<String>,
+    spotByColor: MutableList<String>,
+    regByColor: MutableList<String>,
+    spotByReg: MutableList<String>,
+) {
+    list.clear()
+    listNumberCar.clear()
+    spotByColor.clear()
+    regByColor.clear()
+    spotByReg.clear()
+}
+
+
+fun main() {
+    val list: MutableList<String> = mutableListOf()
+    val parkingLot: MutableList<Int> = mutableListOf()
+    val listNumberCar: MutableList<String> = mutableListOf()
+    val spotByColor: MutableList<String> = mutableListOf()
+    val regByColor: MutableList<String> = mutableListOf()
+    val spotByReg: MutableList<String> = mutableListOf()
+
+    while (true) {
+        park(list, parkingLot, listNumberCar, spotByColor, regByColor, spotByReg)
+    }
+}
